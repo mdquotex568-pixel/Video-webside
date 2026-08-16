@@ -35,27 +35,21 @@ function getFallbackVideos() {
             title: "Amazing Nature Documentary",
             description: "Beautiful nature footage with relaxing music.",
             embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-            downloadUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-            category: "nature",
-            duration: "10:25"
+            category: "nature"
         },
         {
             id: 2,
             title: "Big Buck Bunny - Animation",
             description: "Classic animation short film about a big rabbit.",
             embedUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
-            downloadUrl: "https://www.w3schools.com/html/movie.mp4",
-            category: "animation",
-            duration: "05:30"
+            category: "animation"
         },
         {
             id: 3,
             title: "Music Video - Top Hits",
             description: "Latest music videos collection.",
             embedUrl: "https://www.youtube.com/embed/9bZkp7q19f0",
-            downloadUrl: "https://example.com/music-video.mp4",
-            category: "music",
-            duration: "03:45"
+            category: "music"
         }
     ];
 }
@@ -79,7 +73,9 @@ function displayVideos(videoList) {
             <div class="video-card" onclick="openVideo(${video.id})">
                 <div class="video-thumbnail">
                     <iframe src="${video.embedUrl}" frameborder="0" allowfullscreen></iframe>
-                    ${video.duration ? `<span class="video-duration">${video.duration}</span>` : ''}
+                    <div class="play-overlay">
+                        <i class="fas fa-play"></i>
+                    </div>
                 </div>
                 <div class="video-card-content">
                     <h3>${video.title}</h3>
@@ -229,12 +225,185 @@ function copyToClipboard(text) {
     });
 }
 
-// Download Video
-function downloadVideo() {
-    if (!currentVideo || !currentVideo.downloadUrl) return;
+// Download Video - AUTO DETECT from embed URL
+async function downloadVideo() {
+    if (!currentVideo) return;
     
-    // Direct download
-    window.open(currentVideo.downloadUrl, '_blank');
+    const downloadBtn = document.querySelector('.download-btn');
+    const originalText = downloadBtn.innerHTML;
+    
+    // Show loading state
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Loading...</span>';
+    downloadBtn.disabled = true;
+    
+    try {
+        const embedUrl = currentVideo.embedUrl;
+        let downloadUrl = await extractDownloadUrl(embedUrl);
+        
+        if (downloadUrl) {
+            // Direct download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `${currentVideo.title}.mp4`;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show success message
+            downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
+            setTimeout(() => {
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 2000);
+        } else {
+            // Fallback: Try to open embed URL directly
+            window.open(embedUrl, '_blank');
+            
+            downloadBtn.innerHTML = '<i class="fas fa-external-link-alt"></i><span>Opened</span>';
+            setTimeout(() => {
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('Download error:', error);
+        
+        // Show error message
+        downloadBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Error</span>';
+        setTimeout(() => {
+            downloadBtn.innerHTML = originalText;
+            downloadBtn.disabled = false;
+        }, 2000);
+        
+        alert('Download failed. Please try again.');
+    }
+}
+
+// Extract Download URL from Embed URL
+async function extractDownloadUrl(embedUrl) {
+    // YouTube
+    if (embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be')) {
+        return await extractYouTubeDownload(embedUrl);
+    }
+    
+    // Vimeo
+    if (embedUrl.includes('vimeo.com')) {
+        return await extractVimeoDownload(embedUrl);
+    }
+    
+    // Google Drive
+    if (embedUrl.includes('drive.google.com')) {
+        return await extractGoogleDriveDownload(embedUrl);
+    }
+    
+    // Direct video files
+    if (embedUrl.match(/\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i)) {
+        return embedUrl;
+    }
+    
+    // Dailymotion
+    if (embedUrl.includes('dailymotion.com')) {
+        return await extractDailymotionDownload(embedUrl);
+    }
+    
+    return null;
+}
+
+// Extract YouTube Download URL
+async function extractYouTubeDownload(url) {
+    const videoId = extractYouTubeId(url);
+    if (!videoId) return null;
+    
+    // Try common YouTube download APIs
+    const apis = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`,
+        `https://api.codetabs.com/v1/proxy?quest=https://www.youtube.com/watch?v=${videoId}`
+    ];
+    
+    for (const api of apis) {
+        try {
+            const response = await fetch(api);
+            const html = await response.text();
+            
+            // Look for video streams in the response
+            const streamMatch = html.match(/"url_encoded_fmt_stream_map":"([^"]+)"/);
+            if (streamMatch) {
+                const streams = decodeURIComponent(streamMatch[1]);
+                const urlMatch = streams.match(/url=([^&]+)/);
+                if (urlMatch) {
+                    return decodeURIComponent(urlMatch[1]);
+                }
+            }
+        } catch (error) {
+            console.log('API failed:', api);
+        }
+    }
+    
+    return null;
+}
+
+// Extract YouTube Video ID
+function extractYouTubeId(url) {
+    const patterns = [
+        /youtube\.com\/embed\/([^/?]+)/,
+        /youtube\.com\/watch\?v=([^&]+)/,
+        /youtu\.be\/([^/?]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match) return match[1];
+    }
+    
+    return null;
+}
+
+// Extract Vimeo Download URL
+async function extractVimeoDownload(url) {
+    const videoId = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if (!videoId) return null;
+    
+    try {
+        const response = await fetch(`https://player.vimeo.com/video/${videoId[1]}/config`);
+        const data = await response.json();
+        
+        if (data.request && data.request.files && data.request.files.progressive) {
+            const files = data.request.files.progressive;
+            // Get highest quality
+            const bestQuality = files[files.length - 1];
+            return bestQuality.url;
+        }
+    } catch (error) {
+        console.error('Vimeo extraction failed:', error);
+    }
+    
+    return null;
+}
+
+// Extract Google Drive Download URL
+async function extractGoogleDriveDownload(url) {
+    const fileId = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if (!fileId) return null;
+    
+    // Google Drive direct download URL
+    return `https://drive.google.com/uc?export=download&id=${fileId[1]}`;
+}
+
+// Extract Dailymotion Download URL
+async function extractDailymotionDownload(url) {
+    const videoId = url.match(/dailymotion\.com\/video\/([^_?]+)/);
+    if (!videoId) return null;
+    
+    try {
+        const response = await fetch(`https://api.dailymotion.com/video/${videoId[1]}?fields=stream_url`);
+        const data = await response.json();
+        return data.stream_url;
+    } catch (error) {
+        console.error('Dailymotion extraction failed:', error);
+    }
+    
+    return null;
 }
 
 // Toggle Sidebar
