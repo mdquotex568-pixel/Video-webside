@@ -2,30 +2,38 @@
     "videos": [
         {
             "id": 1,
-            "title": "Amazing Nature Documentary",
-            "description": "Beautiful nature footage with relaxing music. Watch this stunning documentary about wildlife.",
+            "title": "Amazing Nature Documentary 4K",
+            "description": "Experience the beauty of nature in stunning 4K quality. This documentary features breathtaking landscapes, wildlife, and relaxing music.",
             "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
-            "downloadUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
-            "category": "nature",
-            "tags": ["wildlife", "animals", "relaxing"]
+            "category": "nature"
         },
         {
             "id": 2,
-            "title": "Big Buck Bunny - Animation",
-            "description": "Classic animation short film about a big rabbit. Great for all ages.",
+            "title": "Big Buck Bunny - Full Animation",
+            "description": "Big Buck Bunny is a classic open-source animation film about a giant rabbit.",
             "embedUrl": "https://www.youtube.com/embed/aqz-KE-bpKQ",
-            "downloadUrl": "https://www.w3schools.com/html/movie.mp4",
-            "category": "animation",
-            "tags": ["cartoon", "funny", "kids"]
+            "category": "animation"
         },
         {
             "id": 3,
-            "title": "Music Video - Top Hits 2024",
-            "description": "Latest music videos collection. All your favorite songs in one place.",
+            "title": "Top Music Hits 2024",
+            "description": "The best music hits of 2024 all in one place.",
             "embedUrl": "https://www.youtube.com/embed/9bZkp7q19f0",
-            "downloadUrl": "https://example.com/music-video.mp4",
-            "category": "music",
-            "tags": ["song", "dance", "entertainment"]
+            "category": "music"
+        },
+        {
+            "id": 4,
+            "title": "Google Drive Video Example",
+            "description": "This video is hosted on Google Drive and will auto-download from there.",
+            "embedUrl": "https://drive.google.com/file/d/FILE_ID/preview",
+            "category": "technology"
+        },
+        {
+            "id": 5,
+            "title": "Direct MP4 Video",
+            "description": "This is a direct MP4 video link that will download immediately.",
+            "embedUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+            "category": "other"
         }
     ]
 }
