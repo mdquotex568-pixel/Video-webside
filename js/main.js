@@ -23,6 +23,11 @@ async function loadVideos() {
         console.error('Error loading videos:', error);
         // Fallback data
         videos = getFallbackVideos();
+        videos.forEach(video => {
+            if (!videoStats[video.id]) {
+                videoStats[video.id] = { views: 0, likes: 0 };
+            }
+        });
         displayVideos(videos);
     }
 }
@@ -69,10 +74,11 @@ function displayVideos(videoList) {
     
     grid.innerHTML = videoList.map(video => {
         const stats = videoStats[video.id] || { views: 0, likes: 0 };
+        const thumbnail = getThumbnailUrl(video);
         return `
             <div class="video-card" onclick="openVideo(${video.id})">
                 <div class="video-thumbnail">
-                    <iframe src="${video.embedUrl}" frameborder="0" allowfullscreen></iframe>
+                    ${thumbnail ? `<img src="${thumbnail}" alt="${video.title}">` : getEmbedThumbnail(video.embedUrl)}
                     <div class="play-overlay">
                         <i class="fas fa-play"></i>
                     </div>
@@ -87,6 +93,28 @@ function displayVideos(videoList) {
             </div>
         `;
     }).join('');
+}
+
+// Get Thumbnail URL (if provided)
+function getThumbnailUrl(video) {
+    if (video.thumbnailUrl) return video.thumbnailUrl;
+    // If YouTube, use auto thumbnail
+    if (video.embedUrl.includes('youtube.com') || video.embedUrl.includes('youtu.be')) {
+        const videoId = extractYouTubeId(video.embedUrl);
+        if (videoId) {
+            return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        }
+    }
+    return null;
+}
+
+// Get Embed Thumbnail (fallback: use iframe as thumbnail)
+function getEmbedThumbnail(embedUrl) {
+    if (isDirectVideoUrl(embedUrl)) {
+        return `<video src="${embedUrl}" muted></video>`;
+    } else {
+        return `<iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
+    }
 }
 
 // Format Numbers
@@ -118,7 +146,7 @@ function searchVideos() {
 }
 
 // Open Video
-function openVideo(videoId) {
+function openVideo(videoId, pushState = true) {
     currentVideo = videos.find(v => v.id === videoId);
     
     if (!currentVideo) return;
@@ -131,7 +159,7 @@ function openVideo(videoId) {
     localStorage.setItem('videoStats', JSON.stringify(videoStats));
     
     // Update modal
-    document.getElementById('videoFrame').src = currentVideo.embedUrl;
+    updateVideoPlayer(currentVideo);
     document.getElementById('videoTitle').textContent = currentVideo.title;
     document.getElementById('videoDescription').textContent = currentVideo.description;
     document.getElementById('viewCount').textContent = `${formatCount(videoStats[currentVideo.id].views)} views`;
@@ -140,19 +168,100 @@ function openVideo(videoId) {
     // Update like button state
     updateLikeButton();
     
+    // Show related videos
+    showRelatedVideos(currentVideo);
+    
     // Show modal
     document.getElementById('videoModal').style.display = 'block';
     document.body.style.overflow = 'hidden';
+    
+    // Update browser history
+    if (pushState) {
+        history.pushState({ videoId: videoId }, '', `?video=${videoId}`);
+    }
     
     // Refresh grid to show updated views
     displayVideos(videos);
 }
 
+// Update Video Player (handles iframe, direct video, Google Drive)
+function updateVideoPlayer(video) {
+    const container = document.getElementById('videoPlayerContainer');
+    const embedUrl = video.embedUrl;
+    
+    if (isDirectVideoUrl(embedUrl)) {
+        container.innerHTML = `<video controls autoplay src="${embedUrl}"></video>`;
+    } else if (isGoogleDriveUrl(embedUrl)) {
+        // Convert Google Drive share link to embeddable
+        const fileId = extractGoogleDriveId(embedUrl);
+        if (fileId) {
+            container.innerHTML = `<iframe src="https://drive.google.com/file/d/${fileId}/preview" frameborder="0" allowfullscreen allow="autoplay"></iframe>`;
+        } else {
+            container.innerHTML = `<iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
+        }
+    } else {
+        container.innerHTML = `<iframe src="${embedUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+    }
+}
+
+// Check if URL is direct video file
+function isDirectVideoUrl(url) {
+    return url.match(/\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i);
+}
+
+// Check if URL is Google Drive
+function isGoogleDriveUrl(url) {
+    return url.includes('drive.google.com');
+}
+
+// Extract Google Drive file ID
+function extractGoogleDriveId(url) {
+    const match = url.match(/\/file\/d\/([^/]+)/) || url.match(/[?&]id=([^&]+)/);
+    return match ? match[1] : null;
+}
+
+// Show Related Videos
+function showRelatedVideos(currentVideo) {
+    const relatedContainer = document.getElementById('relatedVideos');
+    const related = videos.filter(v => v.id !== currentVideo.id && v.category === currentVideo.category);
+    
+    if (related.length === 0) {
+        relatedContainer.innerHTML = '<p>No related videos found.</p>';
+        return;
+    }
+    
+    relatedContainer.innerHTML = related.map(video => {
+        const stats = videoStats[video.id] || { views: 0, likes: 0 };
+        const thumbnail = getThumbnailUrl(video);
+        return `
+            <div class="related-card" onclick="openVideo(${video.id})">
+                <div class="related-thumbnail">
+                    ${thumbnail ? `<img src="${thumbnail}" alt="${video.title}">` : getEmbedThumbnail(video.embedUrl)}
+                </div>
+                <div class="related-info">
+                    <h4>${video.title}</h4>
+                    <div class="related-meta">
+                        ${formatCount(stats.views)} views • ${formatCount(stats.likes)} likes
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 // Close Modal
 function closeModal() {
     document.getElementById('videoModal').style.display = 'none';
-    document.getElementById('videoFrame').src = '';
+    document.getElementById('videoPlayerContainer').innerHTML = '';
     document.body.style.overflow = 'auto';
+    // Remove query param when closing
+    if (history.state && history.state.videoId) {
+        history.back();
+    } else {
+        // If no state, just remove query string without adding history
+        const url = window.location.pathname;
+        history.replaceState(null, '', url);
+    }
 }
 
 // Like Video (One like per user)
@@ -179,8 +288,9 @@ function likeVideo() {
     document.getElementById('likeCount').textContent = `${formatCount(videoStats[videoId].likes)} likes`;
     updateLikeButton();
     
-    // Refresh grid
+    // Refresh grid and related
     displayVideos(videos);
+    showRelatedVideos(currentVideo);
 }
 
 // Update Like Button
@@ -232,8 +342,7 @@ async function downloadVideo() {
     const downloadBtn = document.querySelector('.download-btn');
     const originalText = downloadBtn.innerHTML;
     
-    // Show loading state
-    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Loading...</span>';
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Preparing...</span>';
     downloadBtn.disabled = true;
     
     try {
@@ -241,7 +350,7 @@ async function downloadVideo() {
         let downloadUrl = await extractDownloadUrl(embedUrl);
         
         if (downloadUrl) {
-            // Direct download
+            // Trigger download
             const link = document.createElement('a');
             link.href = downloadUrl;
             link.download = `${currentVideo.title}.mp4`;
@@ -250,16 +359,14 @@ async function downloadVideo() {
             link.click();
             document.body.removeChild(link);
             
-            // Show success message
-            downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloaded!</span>';
+            downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloading...</span>';
             setTimeout(() => {
                 downloadBtn.innerHTML = originalText;
                 downloadBtn.disabled = false;
             }, 2000);
         } else {
-            // Fallback: Try to open embed URL directly
+            // Fallback: Open embed URL in new tab
             window.open(embedUrl, '_blank');
-            
             downloadBtn.innerHTML = '<i class="fas fa-external-link-alt"></i><span>Opened</span>';
             setTimeout(() => {
                 downloadBtn.innerHTML = originalText;
@@ -268,20 +375,30 @@ async function downloadVideo() {
         }
     } catch (error) {
         console.error('Download error:', error);
-        
-        // Show error message
         downloadBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Error</span>';
         setTimeout(() => {
             downloadBtn.innerHTML = originalText;
             downloadBtn.disabled = false;
         }, 2000);
-        
         alert('Download failed. Please try again.');
     }
 }
 
 // Extract Download URL from Embed URL
 async function extractDownloadUrl(embedUrl) {
+    // If direct video file, return as is
+    if (isDirectVideoUrl(embedUrl)) {
+        return embedUrl;
+    }
+    
+    // Google Drive
+    if (isGoogleDriveUrl(embedUrl)) {
+        const fileId = extractGoogleDriveId(embedUrl);
+        if (fileId) {
+            return `https://drive.google.com/uc?export=download&id=${fileId}`;
+        }
+    }
+    
     // YouTube
     if (embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be')) {
         return await extractYouTubeDownload(embedUrl);
@@ -290,16 +407,6 @@ async function extractDownloadUrl(embedUrl) {
     // Vimeo
     if (embedUrl.includes('vimeo.com')) {
         return await extractVimeoDownload(embedUrl);
-    }
-    
-    // Google Drive
-    if (embedUrl.includes('drive.google.com')) {
-        return await extractGoogleDriveDownload(embedUrl);
-    }
-    
-    // Direct video files
-    if (embedUrl.match(/\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i)) {
-        return embedUrl;
     }
     
     // Dailymotion
@@ -315,7 +422,6 @@ async function extractYouTubeDownload(url) {
     const videoId = extractYouTubeId(url);
     if (!videoId) return null;
     
-    // Try common YouTube download APIs
     const apis = [
         `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`,
         `https://api.codetabs.com/v1/proxy?quest=https://www.youtube.com/watch?v=${videoId}`
@@ -325,8 +431,6 @@ async function extractYouTubeDownload(url) {
         try {
             const response = await fetch(api);
             const html = await response.text();
-            
-            // Look for video streams in the response
             const streamMatch = html.match(/"url_encoded_fmt_stream_map":"([^"]+)"/);
             if (streamMatch) {
                 const streams = decodeURIComponent(streamMatch[1]);
@@ -339,7 +443,6 @@ async function extractYouTubeDownload(url) {
             console.log('API failed:', api);
         }
     }
-    
     return null;
 }
 
@@ -350,12 +453,10 @@ function extractYouTubeId(url) {
         /youtube\.com\/watch\?v=([^&]+)/,
         /youtu\.be\/([^/?]+)/
     ];
-    
     for (const pattern of patterns) {
         const match = url.match(pattern);
         if (match) return match[1];
     }
-    
     return null;
 }
 
@@ -363,38 +464,24 @@ function extractYouTubeId(url) {
 async function extractVimeoDownload(url) {
     const videoId = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
     if (!videoId) return null;
-    
     try {
         const response = await fetch(`https://player.vimeo.com/video/${videoId[1]}/config`);
         const data = await response.json();
-        
         if (data.request && data.request.files && data.request.files.progressive) {
             const files = data.request.files.progressive;
-            // Get highest quality
             const bestQuality = files[files.length - 1];
             return bestQuality.url;
         }
     } catch (error) {
         console.error('Vimeo extraction failed:', error);
     }
-    
     return null;
-}
-
-// Extract Google Drive Download URL
-async function extractGoogleDriveDownload(url) {
-    const fileId = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
-    if (!fileId) return null;
-    
-    // Google Drive direct download URL
-    return `https://drive.google.com/uc?export=download&id=${fileId[1]}`;
 }
 
 // Extract Dailymotion Download URL
 async function extractDailymotionDownload(url) {
     const videoId = url.match(/dailymotion\.com\/video\/([^_?]+)/);
     if (!videoId) return null;
-    
     try {
         const response = await fetch(`https://api.dailymotion.com/video/${videoId[1]}?fields=stream_url`);
         const data = await response.json();
@@ -402,7 +489,6 @@ async function extractDailymotionDownload(url) {
     } catch (error) {
         console.error('Dailymotion extraction failed:', error);
     }
-    
     return null;
 }
 
@@ -466,6 +552,22 @@ function setActiveSidebar(active) {
     }
 }
 
+// Handle browser back button
+window.addEventListener('popstate', function(event) {
+    if (event.state && event.state.videoId) {
+        // User navigated back to a video state, reopen modal
+        const videoId = event.state.videoId;
+        openVideo(videoId, false);
+    } else {
+        // No state, close modal if open
+        if (document.getElementById('videoModal').style.display === 'block') {
+            closeModal();
+        }
+        // Show all videos
+        showAllVideos();
+    }
+});
+
 // Close modal on outside click
 window.onclick = function(event) {
     if (event.target === document.getElementById('videoModal')) {
@@ -481,4 +583,12 @@ document.addEventListener('keydown', function(event) {
 });
 
 // Load videos on page load
-document.addEventListener('DOMContentLoaded', loadVideos);
+document.addEventListener('DOMContentLoaded', function() {
+    loadVideos();
+    // Check if there's a video ID in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const videoId = urlParams.get('video');
+    if (videoId) {
+        openVideo(parseInt(videoId), false);
+    }
+});
