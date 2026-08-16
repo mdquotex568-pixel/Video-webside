@@ -2,41 +2,53 @@
     "videos": [
         {
             "id": 1,
-            "title": "Amazing Nature Documentary 4K",
-            "description": "Experience the beauty of nature in stunning 4K quality. This documentary features breathtaking landscapes, wildlife, and relaxing music.",
-            "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
-            "category": "nature",
+            "title": "YouTube Normal Watch Link",
+            "description": "Just paste the regular YouTube URL.",
+            "embedUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "category": "music",
             "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
         },
         {
             "id": 2,
-            "title": "Big Buck Bunny - Full Animation",
-            "description": "Big Buck Bunny is a classic open-source animation film about a giant rabbit.",
-            "embedUrl": "https://www.youtube.com/embed/aqz-KE-bpKQ",
-            "category": "animation",
-            "thumbnailUrl": "https://img.youtube.com/vi/aqz-KE-bpKQ/maxresdefault.jpg"
+            "title": "YouTube Shorts Link",
+            "description": "YouTube Shorts URL works automatically.",
+            "embedUrl": "https://youtube.com/shorts/abc123XYZ",
+            "category": "entertainment"
         },
         {
             "id": 3,
-            "title": "Top Music Hits 2024",
-            "description": "The best music hits of 2024 all in one place.",
-            "embedUrl": "https://www.youtube.com/embed/9bZkp7q19f0",
-            "category": "music",
-            "thumbnailUrl": "https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg"
+            "title": "Vimeo Video",
+            "description": "Vimeo normal link, no need to convert.",
+            "embedUrl": "https://vimeo.com/1084537",
+            "category": "animation"
         },
         {
             "id": 4,
-            "title": "russian teen girl with white pussy",
-            "description": "russian girl sex video ff big boob ff big tits ff anal sex ff gd look ff cute girl.",
-            "embedUrl": "https://www.freepornvideo.sex/xxx/30682/karolaysexy-s-surprise-bedroom-blow-job-i-showered-my-sister-with-my-gigantic-flow-of-jizz/",
-            "category": "18+"
+            "title": "Dailymotion Video",
+            "description": "Dailymotion regular link.",
+            "embedUrl": "https://www.dailymotion.com/video/x7tg9v0",
+            "category": "sports"
         },
         {
             "id": 5,
-            "title": "Direct MP4 Video",
-            "description": "This is a direct MP4 video link that will play and download immediately.",
+            "title": "Google Drive Share Link",
+            "description": "Google Drive share link works.",
+            "embedUrl": "https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0J/view?usp=sharing",
+            "category": "education"
+        },
+        {
+            "id": 6,
+            "title": "Direct MP4 File",
+            "description": "Direct video file, plays natively.",
             "embedUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
             "category": "other"
+        },
+        {
+            "id": 7,
+            "title": "Full Iframe Embed Code",
+            "description": "You can paste the entire iframe code.",
+            "embedUrl": "<iframe width='560' height='315' src='https://www.youtube.com/embed/9bZkp7q19f0' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe>",
+            "category": "music"
         }
     ]
 }
