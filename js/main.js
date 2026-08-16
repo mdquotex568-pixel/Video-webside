@@ -1,45 +1,66 @@
-// Video data
+// Video Data Management
 let videos = [];
 let currentVideo = null;
-let likes = {};
+let userLikes = new Set(JSON.parse(localStorage.getItem('userLikes') || '[]'));
+let videoStats = JSON.parse(localStorage.getItem('videoStats') || '{}');
 
-// Load videos from JSON
+// Load Videos
 async function loadVideos() {
     try {
         const response = await fetch('data/videos.json');
         const data = await response.json();
         videos = data.videos;
         
-        // Load likes from localStorage
-        likes = JSON.parse(localStorage.getItem('videoLikes')) || {};
+        // Initialize stats if not exists
+        videos.forEach(video => {
+            if (!videoStats[video.id]) {
+                videoStats[video.id] = { views: 0, likes: 0 };
+            }
+        });
         
         displayVideos(videos);
     } catch (error) {
         console.error('Error loading videos:', error);
-        // Fallback videos if JSON fails
-        videos = [
-            {
-                id: 1,
-                title: "Sample Video 1",
-                description: "This is a sample video description",
-                embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-                downloadUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-                category: "music"
-            },
-            {
-                id: 2,
-                title: "Big Buck Bunny",
-                description: "Animation short film",
-                embedUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
-                downloadUrl: "https://www.w3schools.com/html/movie.mp4",
-                category: "animation"
-            }
-        ];
+        // Fallback data
+        videos = getFallbackVideos();
         displayVideos(videos);
     }
 }
 
-// Display videos in grid
+// Fallback Videos
+function getFallbackVideos() {
+    return [
+        {
+            id: 1,
+            title: "Amazing Nature Documentary",
+            description: "Beautiful nature footage with relaxing music.",
+            embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            downloadUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+            category: "nature",
+            duration: "10:25"
+        },
+        {
+            id: 2,
+            title: "Big Buck Bunny - Animation",
+            description: "Classic animation short film about a big rabbit.",
+            embedUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
+            downloadUrl: "https://www.w3schools.com/html/movie.mp4",
+            category: "animation",
+            duration: "05:30"
+        },
+        {
+            id: 3,
+            title: "Music Video - Top Hits",
+            description: "Latest music videos collection.",
+            embedUrl: "https://www.youtube.com/embed/9bZkp7q19f0",
+            downloadUrl: "https://example.com/music-video.mp4",
+            category: "music",
+            duration: "03:45"
+        }
+    ];
+}
+
+// Display Videos
 function displayVideos(videoList) {
     const grid = document.getElementById('videoGrid');
     const noResults = document.getElementById('noResults');
@@ -52,21 +73,38 @@ function displayVideos(videoList) {
     
     noResults.style.display = 'none';
     
-    grid.innerHTML = videoList.map(video => `
-        <div class="video-card" onclick="openVideo(${video.id})">
-            <div class="video-thumbnail">
-                <iframe src="${video.embedUrl}" frameborder="0" allowfullscreen></iframe>
-                <div class="play-icon">▶️</div>
+    grid.innerHTML = videoList.map(video => {
+        const stats = videoStats[video.id] || { views: 0, likes: 0 };
+        return `
+            <div class="video-card" onclick="openVideo(${video.id})">
+                <div class="video-thumbnail">
+                    <iframe src="${video.embedUrl}" frameborder="0" allowfullscreen></iframe>
+                    ${video.duration ? `<span class="video-duration">${video.duration}</span>` : ''}
+                </div>
+                <div class="video-card-content">
+                    <h3>${video.title}</h3>
+                    <div class="video-meta">
+                        <span><i class="fas fa-eye"></i> ${formatCount(stats.views)} views</span>
+                        <span><i class="fas fa-thumbs-up"></i> ${formatCount(stats.likes)} likes</span>
+                    </div>
+                </div>
             </div>
-            <div class="video-card-content">
-                <h3>${video.title}</h3>
-                <p>${video.description.substring(0, 100)}...</p>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
-// Search functionality
+// Format Numbers
+function formatCount(count) {
+    if (count >= 1000000) {
+        return (count / 1000000).toFixed(1) + 'M';
+    }
+    if (count >= 1000) {
+        return (count / 1000).toFixed(1) + 'K';
+    }
+    return count;
+}
+
+// Search Videos
 function searchVideos() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
     
@@ -83,75 +121,180 @@ function searchVideos() {
     displayVideos(filteredVideos);
 }
 
-// Open video in modal
+// Open Video
 function openVideo(videoId) {
     currentVideo = videos.find(v => v.id === videoId);
     
     if (!currentVideo) return;
     
+    // Increment views
+    if (!videoStats[currentVideo.id]) {
+        videoStats[currentVideo.id] = { views: 0, likes: 0 };
+    }
+    videoStats[currentVideo.id].views++;
+    localStorage.setItem('videoStats', JSON.stringify(videoStats));
+    
+    // Update modal
     document.getElementById('videoFrame').src = currentVideo.embedUrl;
     document.getElementById('videoTitle').textContent = currentVideo.title;
     document.getElementById('videoDescription').textContent = currentVideo.description;
-    document.getElementById('likeCount').textContent = likes[videoId] || 0;
+    document.getElementById('viewCount').textContent = `${formatCount(videoStats[currentVideo.id].views)} views`;
+    document.getElementById('likeCount').textContent = `${formatCount(videoStats[currentVideo.id].likes)} likes`;
     
+    // Update like button state
+    updateLikeButton();
+    
+    // Show modal
     document.getElementById('videoModal').style.display = 'block';
     document.body.style.overflow = 'hidden';
+    
+    // Refresh grid to show updated views
+    displayVideos(videos);
 }
 
-// Close modal
+// Close Modal
 function closeModal() {
     document.getElementById('videoModal').style.display = 'none';
     document.getElementById('videoFrame').src = '';
     document.body.style.overflow = 'auto';
 }
 
-// Like functionality
+// Like Video (One like per user)
 function likeVideo() {
     if (!currentVideo) return;
     
-    if (!likes[currentVideo.id]) {
-        likes[currentVideo.id] = 0;
+    const videoId = currentVideo.id;
+    
+    if (userLikes.has(videoId.toString())) {
+        // Unlike
+        userLikes.delete(videoId.toString());
+        videoStats[videoId].likes--;
+    } else {
+        // Like
+        userLikes.add(videoId.toString());
+        videoStats[videoId].likes++;
     }
     
-    likes[currentVideo.id]++;
-    document.getElementById('likeCount').textContent = likes[currentVideo.id];
-    
     // Save to localStorage
-    localStorage.setItem('videoLikes', JSON.stringify(likes));
+    localStorage.setItem('userLikes', JSON.stringify([...userLikes]));
+    localStorage.setItem('videoStats', JSON.stringify(videoStats));
+    
+    // Update UI
+    document.getElementById('likeCount').textContent = `${formatCount(videoStats[videoId].likes)} likes`;
+    updateLikeButton();
+    
+    // Refresh grid
+    displayVideos(videos);
 }
 
-// Share functionality
+// Update Like Button
+function updateLikeButton() {
+    if (!currentVideo) return;
+    
+    const likeBtn = document.getElementById('likeBtn');
+    const isLiked = userLikes.has(currentVideo.id.toString());
+    
+    if (isLiked) {
+        likeBtn.classList.add('liked');
+        likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i><span>Liked</span>';
+    } else {
+        likeBtn.classList.remove('liked');
+        likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i><span>Like</span>';
+    }
+}
+
+// Share Video
 function shareVideo() {
     if (!currentVideo) return;
     
-    const shareUrl = `${window.location.href}?video=${currentVideo.id}`;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?video=${currentVideo.id}`;
     
     if (navigator.share) {
         navigator.share({
             title: currentVideo.title,
             text: currentVideo.description,
             url: shareUrl,
-        }).catch(console.error);
-    } else {
-        // Fallback for browsers that don't support Web Share API
-        navigator.clipboard.writeText(shareUrl).then(() => {
-            alert('লিংক কপি করা হয়েছে! 📋');
+        }).catch(() => {
+            copyToClipboard(shareUrl);
         });
+    } else {
+        copyToClipboard(shareUrl);
     }
 }
 
-// Download functionality
+// Copy to Clipboard
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Link copied to clipboard!');
+    });
+}
+
+// Download Video
 function downloadVideo() {
-    if (!currentVideo) return;
+    if (!currentVideo || !currentVideo.downloadUrl) return;
     
-    // Create download link
-    const link = document.createElement('a');
-    link.href = currentVideo.downloadUrl;
-    link.download = `${currentVideo.title}.mp4`;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Direct download
+    window.open(currentVideo.downloadUrl, '_blank');
+}
+
+// Toggle Sidebar
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('hidden');
+    sidebar.classList.toggle('show');
+}
+
+// Filter Functions
+function showAllVideos() {
+    displayVideos(videos);
+    setActiveSidebar('home');
+}
+
+function showTrending() {
+    const trending = [...videos].sort((a, b) => {
+        const statsA = videoStats[a.id] || { views: 0 };
+        const statsB = videoStats[b.id] || { views: 0 };
+        return statsB.views - statsA.views;
+    });
+    displayVideos(trending);
+    setActiveSidebar('trending');
+}
+
+function showMostViewed() {
+    const mostViewed = [...videos].sort((a, b) => {
+        const statsA = videoStats[a.id] || { views: 0 };
+        const statsB = videoStats[b.id] || { views: 0 };
+        return statsB.views - statsA.views;
+    });
+    displayVideos(mostViewed);
+    setActiveSidebar('viewed');
+}
+
+function showMostLiked() {
+    const mostLiked = [...videos].sort((a, b) => {
+        const statsA = videoStats[a.id] || { likes: 0 };
+        const statsB = videoStats[b.id] || { likes: 0 };
+        return statsB.likes - statsA.likes;
+    });
+    displayVideos(mostLiked);
+    setActiveSidebar('liked');
+}
+
+// Set Active Sidebar
+function setActiveSidebar(active) {
+    const items = document.querySelectorAll('.sidebar-item');
+    items.forEach(item => item.classList.remove('active'));
+    
+    const activeMap = {
+        'home': 0,
+        'trending': 1,
+        'viewed': 2,
+        'liked': 3
+    };
+    
+    if (activeMap[active] !== undefined) {
+        items[activeMap[active]].classList.add('active');
+    }
 }
 
 // Close modal on outside click
@@ -160,6 +303,13 @@ window.onclick = function(event) {
         closeModal();
     }
 }
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+    }
+});
 
 // Load videos on page load
 document.addEventListener('DOMContentLoaded', loadVideos);
