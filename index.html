@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Video Hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="logo">
+            <h1>🎬 MyVideoHub</h1>
+        </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="ভিডিও খুঁজুন..." onkeyup="searchVideos()">
+            <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div id="videoGrid" class="video-grid">
+            <!-- Videos will be loaded here dynamically -->
+        </div>
+        
+        <!-- No Results Message -->
+        <div id="noResults" class="no-results" style="display: none;">
+            <h2>😔 কোনো ভিডিও পাওয়া যায়নি</h2>
+            <p>অন্য কিছু খুঁজে দেখুন</p>
+        </div>
+    </main>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="video-player">
+                <iframe id="videoFrame" src="" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <div class="video-info">
+                <h2 id="videoTitle"></h2>
+                <p id="videoDescription"></p>
+                <div class="action-buttons">
+                    <button class="btn like-btn" onclick="likeVideo()">
+                        <i class="fas fa-thumbs-up"></i> Like (<span id="likeCount">0</span>)
+                    </button>
+                    <button class="btn share-btn" onclick="shareVideo()">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                    <button class="btn download-btn" onclick="downloadVideo()">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+                      </html>
