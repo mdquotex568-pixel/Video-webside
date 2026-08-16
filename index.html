@@ -3,54 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Video Hub</title>
+    <title>Hot Video Hub</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Header Section -->
+    <!-- Header -->
     <header class="header">
-        <div class="logo">
-            <h1>🎬 MyVideoHub</h1>
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="/" class="logo">
+                <i class="fas fa-play-circle"></i>
+                <span>Hot Video Hub</span>
+            </a>
         </div>
+        
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="ভিডিও খুঁজুন..." onkeyup="searchVideos()">
-            <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
+            <input type="text" id="searchInput" placeholder="Search videos..." onkeyup="searchVideos()">
+            <button class="search-btn" onclick="searchVideos()">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        
+        <div class="header-right">
+            <button class="icon-btn" onclick="alert('Notifications coming soon!')">
+                <i class="fas fa-bell"></i>
+            </button>
+            <button class="icon-btn" onclick="alert('Profile coming soon!')">
+                <i class="fas fa-user-circle"></i>
+            </button>
         </div>
     </header>
 
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <nav>
+            <a href="#" class="sidebar-item active" onclick="showAllVideos()">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="sidebar-item" onclick="showTrending()">
+                <i class="fas fa-fire"></i>
+                <span>Trending</span>
+            </a>
+            <a href="#" class="sidebar-item" onclick="showMostViewed()">
+                <i class="fas fa-eye"></i>
+                <span>Most Viewed</span>
+            </a>
+            <a href="#" class="sidebar-item" onclick="showMostLiked()">
+                <i class="fas fa-thumbs-up"></i>
+                <span>Most Liked</span>
+            </a>
+        </nav>
+    </div>
+
     <!-- Main Content -->
-    <main class="container">
+    <main class="main-content">
         <div id="videoGrid" class="video-grid">
-            <!-- Videos will be loaded here dynamically -->
+            <!-- Videos load here -->
         </div>
         
-        <!-- No Results Message -->
         <div id="noResults" class="no-results" style="display: none;">
-            <h2>😔 কোনো ভিডিও পাওয়া যায়নি</h2>
-            <p>অন্য কিছু খুঁজে দেখুন</p>
+            <i class="fas fa-search"></i>
+            <h2>No videos found</h2>
+            <p>Try different keywords</p>
         </div>
     </main>
 
     <!-- Video Modal -->
     <div id="videoModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <span class="close-modal" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </span>
+            
             <div class="video-player">
-                <iframe id="videoFrame" src="" frameborder="0" allowfullscreen></iframe>
+                <iframe id="videoFrame" src="" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
             </div>
+            
             <div class="video-info">
-                <h2 id="videoTitle"></h2>
-                <p id="videoDescription"></p>
+                <h2 id="videoTitle" class="video-title"></h2>
+                
+                <div class="video-stats">
+                    <span class="stat">
+                        <i class="fas fa-eye"></i>
+                        <span id="viewCount">0 views</span>
+                    </span>
+                    <span class="stat">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span id="likeCount">0 likes</span>
+                    </span>
+                </div>
+                
+                <p id="videoDescription" class="video-description"></p>
+                
                 <div class="action-buttons">
-                    <button class="btn like-btn" onclick="likeVideo()">
-                        <i class="fas fa-thumbs-up"></i> Like (<span id="likeCount">0</span>)
+                    <button class="btn like-btn" onclick="likeVideo()" id="likeBtn">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>Like</span>
                     </button>
+                    
                     <button class="btn share-btn" onclick="shareVideo()">
-                        <i class="fas fa-share"></i> Share
+                        <i class="fas fa-share"></i>
+                        <span>Share</span>
                     </button>
+                    
                     <button class="btn download-btn" onclick="downloadVideo()">
-                        <i class="fas fa-download"></i> Download
+                        <i class="fas fa-download"></i>
+                        <span>Download</span>
                     </button>
                 </div>
             </div>
@@ -59,4 +121,4 @@
 
     <script src="js/main.js"></script>
 </body>
-                      </html>
+</html>
