@@ -6,7 +6,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    background: #f9f9f9;
+    background: #f5f5f5;
     color: #333;
     line-height: 1.6;
 }
@@ -18,8 +18,8 @@ body {
     left: 0;
     right: 0;
     height: 60px;
-    background: #fff;
-    border-bottom: 1px solid #e5e5e5;
+    background: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -30,7 +30,8 @@ body {
 .header-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .menu-btn {
@@ -40,11 +41,11 @@ body {
     cursor: pointer;
     color: #606060;
     padding: 8px;
+    border-radius: 50%;
 }
 
 .menu-btn:hover {
-    background: #f2f2f2;
-    border-radius: 50%;
+    background: #f0f0f0;
 }
 
 .logo {
@@ -53,17 +54,18 @@ body {
     gap: 8px;
     text-decoration: none;
     color: #ff0000;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .logo i {
-    font-size: 28px;
+    font-size: 26px;
 }
 
 .logo span {
     color: #333;
-    font-size: 20px;
+    font-size: 18px;
     letter-spacing: -0.5px;
 }
 
@@ -71,28 +73,30 @@ body {
     flex: 1;
     max-width: 600px;
     display: flex;
-    margin: 0 40px;
+    margin: 0 20px;
 }
 
 .search-container input {
     flex: 1;
-    padding: 10px 20px;
+    padding: 9px 16px;
     border: 1px solid #ccc;
     border-right: none;
-    border-radius: 20px 0 0 20px;
-    font-size: 16px;
+    border-radius: 2px 0 0 2px;
+    font-size: 15px;
     outline: none;
+    background: #fafafa;
 }
 
 .search-container input:focus {
     border-color: #1a73e8;
+    background: #fff;
 }
 
 .search-btn {
-    padding: 10px 20px;
+    padding: 9px 18px;
     background: #f8f8f8;
     border: 1px solid #ccc;
-    border-radius: 0 20px 20px 0;
+    border-radius: 0 2px 2px 0;
     cursor: pointer;
     color: #606060;
 }
@@ -104,6 +108,7 @@ body {
 .header-right {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .icon-btn {
@@ -117,7 +122,7 @@ body {
 }
 
 .icon-btn:hover {
-    background: #f2f2f2;
+    background: #f0f0f0;
 }
 
 /* Sidebar */
@@ -126,9 +131,9 @@ body {
     left: 0;
     top: 60px;
     bottom: 0;
-    width: 240px;
-    background: #fff;
-    border-right: 1px solid #e5e5e5;
+    width: 220px;
+    background: #ffffff;
+    border-right: 1px solid #e0e0e0;
     padding: 12px 0;
     transition: transform 0.3s;
     z-index: 90;
@@ -138,11 +143,15 @@ body {
     transform: translateX(-100%);
 }
 
+.sidebar.show {
+    transform: translateX(0);
+}
+
 .sidebar-item {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 12px 24px;
+    padding: 10px 24px;
     color: #606060;
     text-decoration: none;
     font-size: 14px;
@@ -154,7 +163,7 @@ body {
 }
 
 .sidebar-item.active {
-    background: #e5e5e5;
+    background: #e8e8e8;
     color: #000;
     font-weight: 500;
 }
@@ -166,41 +175,61 @@ body {
 
 /* Main Content */
 .main-content {
-    margin-left: 240px;
+    margin-left: 220px;
     margin-top: 60px;
-    padding: 24px;
+    padding: 20px;
 }
 
 .video-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
 }
 
 .video-card {
     background: #fff;
-    border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e0e0e0;
+    border-radius: 0; /* Full square corners */
 }
 
 .video-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .video-thumbnail {
     position: relative;
     width: 100%;
-    aspect-ratio: 16/9;
+    padding-top: 56.25%; /* 16:9 aspect ratio */
     background: #000;
+    overflow: hidden;
+}
+
+.video-thumbnail img,
+.video-thumbnail iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .video-thumbnail iframe {
-    width: 100%;
-    height: 100%;
     pointer-events: none;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 
 .video-duration {
@@ -210,7 +239,7 @@ body {
     background: rgba(0,0,0,0.8);
     color: #fff;
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: 2px;
     font-size: 12px;
     font-weight: 500;
 }
@@ -220,9 +249,9 @@ body {
 }
 
 .video-card-content h3 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 500;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -276,17 +305,17 @@ body {
 
 .modal-content {
     background: #fff;
-    max-width: 900px;
+    max-width: 1000px;
     margin: 40px auto;
-    border-radius: 12px;
+    border-radius: 0; /* No rounded corners */
     overflow: hidden;
     position: relative;
 }
 
 .close-modal {
     position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 10px;
+    right: 10px;
     font-size: 24px;
     color: #fff;
     cursor: pointer;
@@ -306,12 +335,13 @@ body {
 
 .video-player {
     position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
     background: #000;
 }
 
-.video-player iframe {
+.video-player iframe,
+.video-player video {
     position: absolute;
     top: 0;
     left: 0;
@@ -336,7 +366,7 @@ body {
     font-size: 14px;
     margin-bottom: 16px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .stat {
@@ -351,19 +381,19 @@ body {
     margin-bottom: 20px;
 }
 
-/* Action Buttons */
 .action-buttons {
     display: flex;
-    gap: 12px;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .btn {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 20px;
+    border-radius: 18px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
@@ -372,10 +402,6 @@ body {
 
 .btn i {
     font-size: 16px;
-}
-
-.btn span {
-    font-size: 14px;
 }
 
 .like-btn {
@@ -396,22 +422,88 @@ body {
     color: #1a73e8;
 }
 
-.share-btn {
-    background: #f2f2f2;
-    color: #333;
-}
-
-.share-btn:hover {
-    background: #e5e5e5;
-}
-
+.share-btn,
 .download-btn {
     background: #f2f2f2;
     color: #333;
 }
 
+.share-btn:hover,
 .download-btn:hover {
     background: #e5e5e5;
+}
+
+/* Related Videos */
+.related-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.related-section h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.related-card {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 0;
+}
+
+.related-card:hover {
+    background: #f0f0f0;
+}
+
+.related-thumbnail {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    background: #000;
+    overflow: hidden;
+}
+
+.related-thumbnail img,
+.related-thumbnail iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.related-thumbnail iframe {
+    pointer-events: none;
+}
+
+.related-info {
+    padding: 8px 10px;
+}
+
+.related-info h4 {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.related-meta {
+    font-size: 12px;
+    color: #606060;
+    margin-top: 4px;
 }
 
 /* Responsive */
@@ -426,11 +518,11 @@ body {
     
     .main-content {
         margin-left: 0;
-        padding: 16px;
+        padding: 12px;
     }
     
     .search-container {
-        margin: 0 16px;
+        margin: 0 8px;
     }
     
     .video-grid {
@@ -439,6 +531,9 @@ body {
     
     .modal-content {
         margin: 0;
-        border-radius: 0;
+    }
+    
+    .related-grid {
+        grid-template-columns: 1fr;
     }
     }
