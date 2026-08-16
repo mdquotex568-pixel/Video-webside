@@ -21,7 +21,6 @@ async function loadVideos() {
         displayVideos(videos);
     } catch (error) {
         console.error('Error loading videos:', error);
-        // Fallback data
         videos = getFallbackVideos();
         videos.forEach(video => {
             if (!videoStats[video.id]) {
@@ -39,21 +38,21 @@ function getFallbackVideos() {
             id: 1,
             title: "Amazing Nature Documentary",
             description: "Beautiful nature footage with relaxing music.",
-            embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            embedUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // regular watch URL
             category: "nature"
         },
         {
             id: 2,
             title: "Big Buck Bunny - Animation",
             description: "Classic animation short film about a big rabbit.",
-            embedUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
+            embedUrl: "https://vimeo.com/1084537", // Vimeo normal URL
             category: "animation"
         },
         {
             id: 3,
             title: "Music Video - Top Hits",
             description: "Latest music videos collection.",
-            embedUrl: "https://www.youtube.com/embed/9bZkp7q19f0",
+            embedUrl: "https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0J/view", // Google Drive share link
             category: "music"
         }
     ];
@@ -98,57 +97,62 @@ function displayVideos(videoList) {
 // Get Thumbnail URL (if provided)
 function getThumbnailUrl(video) {
     if (video.thumbnailUrl) return video.thumbnailUrl;
-    // If YouTube, use auto thumbnail
-    if (video.embedUrl.includes('youtube.com') || video.embedUrl.includes('youtu.be')) {
-        const videoId = extractYouTubeId(video.embedUrl);
+    
+    // Auto-detect thumbnail from URL
+    const embedUrl = video.embedUrl;
+    if (embedUrl.includes('<iframe')) {
+        // Extract src from iframe code
+        const srcMatch = embedUrl.match(/src=["']([^"']+)["']/);
+        if (srcMatch) embedUrl = srcMatch[1];
+    }
+    
+    // YouTube
+    if (embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be')) {
+        const videoId = extractYouTubeId(embedUrl);
         if (videoId) {
             return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
         }
     }
+    
+    // Vimeo (thumbnail extraction not trivial, skip)
+    // Others: no auto thumbnail
     return null;
 }
 
-// Get Embed Thumbnail (fallback: use iframe as thumbnail)
+// Get Embed Thumbnail (fallback: use iframe/video as thumbnail)
 function getEmbedThumbnail(embedUrl) {
-    if (isDirectVideoUrl(embedUrl)) {
-        return `<video src="${embedUrl}" muted></video>`;
+    const processedUrl = processVideoUrl(embedUrl);
+    if (isDirectVideoUrl(processedUrl)) {
+        return `<video src="${processedUrl}" muted></video>`;
     } else {
-        return `<iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
+        return `<iframe src="${processedUrl}" frameborder="0" allowfullscreen></iframe>`;
     }
 }
 
 // Format Numbers
 function formatCount(count) {
-    if (count >= 1000000) {
-        return (count / 1000000).toFixed(1) + 'M';
-    }
-    if (count >= 1000) {
-        return (count / 1000).toFixed(1) + 'K';
-    }
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
     return count;
 }
 
 // Search Videos
 function searchVideos() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    
     if (searchTerm === '') {
         displayVideos(videos);
         return;
     }
-    
     const filteredVideos = videos.filter(video => {
         const searchableText = `${video.title} ${video.description} ${video.category}`.toLowerCase();
         return searchableText.includes(searchTerm);
     });
-    
     displayVideos(filteredVideos);
 }
 
 // Open Video
 function openVideo(videoId, pushState = true) {
     currentVideo = videos.find(v => v.id === videoId);
-    
     if (!currentVideo) return;
     
     // Increment views
@@ -165,43 +169,77 @@ function openVideo(videoId, pushState = true) {
     document.getElementById('viewCount').textContent = `${formatCount(videoStats[currentVideo.id].views)} views`;
     document.getElementById('likeCount').textContent = `${formatCount(videoStats[currentVideo.id].likes)} likes`;
     
-    // Update like button state
     updateLikeButton();
-    
-    // Show related videos
     showRelatedVideos(currentVideo);
     
-    // Show modal
     document.getElementById('videoModal').style.display = 'block';
     document.body.style.overflow = 'hidden';
     
-    // Update browser history
     if (pushState) {
         history.pushState({ videoId: videoId }, '', `?video=${videoId}`);
     }
     
-    // Refresh grid to show updated views
     displayVideos(videos);
 }
 
-// Update Video Player (handles iframe, direct video, Google Drive)
+// Update Video Player (handles any URL/iframe code)
 function updateVideoPlayer(video) {
     const container = document.getElementById('videoPlayerContainer');
-    const embedUrl = video.embedUrl;
+    const rawInput = video.embedUrl;
+    const embedUrl = processVideoUrl(rawInput);
     
     if (isDirectVideoUrl(embedUrl)) {
         container.innerHTML = `<video controls autoplay src="${embedUrl}"></video>`;
-    } else if (isGoogleDriveUrl(embedUrl)) {
-        // Convert Google Drive share link to embeddable
-        const fileId = extractGoogleDriveId(embedUrl);
-        if (fileId) {
-            container.innerHTML = `<iframe src="https://drive.google.com/file/d/${fileId}/preview" frameborder="0" allowfullscreen allow="autoplay"></iframe>`;
-        } else {
-            container.innerHTML = `<iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
-        }
     } else {
         container.innerHTML = `<iframe src="${embedUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
     }
+}
+
+// Process any video URL/iframe code and return embeddable URL
+function processVideoUrl(input) {
+    // If input contains iframe code, extract src
+    if (input.includes('<iframe')) {
+        const srcMatch = input.match(/src=["']([^"']+)["']/);
+        if (srcMatch) input = srcMatch[1];
+    }
+    
+    // Trim whitespace
+    input = input.trim();
+    
+    // YouTube
+    if (input.includes('youtube.com') || input.includes('youtu.be')) {
+        const videoId = extractYouTubeId(input);
+        if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+        }
+    }
+    
+    // Vimeo
+    if (input.includes('vimeo.com')) {
+        const videoId = extractVimeoId(input);
+        if (videoId) {
+            return `https://player.vimeo.com/video/${videoId}`;
+        }
+    }
+    
+    // Dailymotion
+    if (input.includes('dailymotion.com')) {
+        const videoId = extractDailymotionId(input);
+        if (videoId) {
+            return `https://www.dailymotion.com/embed/video/${videoId}`;
+        }
+    }
+    
+    // Google Drive
+    if (input.includes('drive.google.com')) {
+        const fileId = extractGoogleDriveId(input);
+        if (fileId) {
+            return `https://drive.google.com/file/d/${fileId}/preview`;
+        }
+    }
+    
+    // Direct video file or other embed URL (return as-is)
+    return input;
 }
 
 // Check if URL is direct video file
@@ -216,7 +254,34 @@ function isGoogleDriveUrl(url) {
 
 // Extract Google Drive file ID
 function extractGoogleDriveId(url) {
-    const match = url.match(/\/file\/d\/([^/]+)/) || url.match(/[?&]id=([^&]+)/);
+    const match = url.match(/\/file\/d\/([^/]+)/) || url.match(/[?&]id=([^&]+)/) || url.match(/\/open\?id=([^&]+)/);
+    return match ? match[1] : null;
+}
+
+// Extract YouTube Video ID from various formats
+function extractYouTubeId(url) {
+    const patterns = [
+        /youtube\.com\/embed\/([^/?]+)/,
+        /youtube\.com\/watch\?v=([^&]+)/,
+        /youtu\.be\/([^/?]+)/,
+        /youtube\.com\/shorts\/([^/?]+)/
+    ];
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match) return match[1];
+    }
+    return null;
+}
+
+// Extract Vimeo ID
+function extractVimeoId(url) {
+    const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    return match ? match[1] : null;
+}
+
+// Extract Dailymotion ID
+function extractDailymotionId(url) {
+    const match = url.match(/dailymotion\.com\/video\/([^_?]+)/);
     return match ? match[1] : null;
 }
 
@@ -254,11 +319,9 @@ function closeModal() {
     document.getElementById('videoModal').style.display = 'none';
     document.getElementById('videoPlayerContainer').innerHTML = '';
     document.body.style.overflow = 'auto';
-    // Remove query param when closing
     if (history.state && history.state.videoId) {
         history.back();
     } else {
-        // If no state, just remove query string without adding history
         const url = window.location.pathname;
         history.replaceState(null, '', url);
     }
@@ -267,28 +330,21 @@ function closeModal() {
 // Like Video (One like per user)
 function likeVideo() {
     if (!currentVideo) return;
-    
     const videoId = currentVideo.id;
     
     if (userLikes.has(videoId.toString())) {
-        // Unlike
         userLikes.delete(videoId.toString());
         videoStats[videoId].likes--;
     } else {
-        // Like
         userLikes.add(videoId.toString());
         videoStats[videoId].likes++;
     }
     
-    // Save to localStorage
     localStorage.setItem('userLikes', JSON.stringify([...userLikes]));
     localStorage.setItem('videoStats', JSON.stringify(videoStats));
     
-    // Update UI
     document.getElementById('likeCount').textContent = `${formatCount(videoStats[videoId].likes)} likes`;
     updateLikeButton();
-    
-    // Refresh grid and related
     displayVideos(videos);
     showRelatedVideos(currentVideo);
 }
@@ -296,10 +352,8 @@ function likeVideo() {
 // Update Like Button
 function updateLikeButton() {
     if (!currentVideo) return;
-    
     const likeBtn = document.getElementById('likeBtn');
     const isLiked = userLikes.has(currentVideo.id.toString());
-    
     if (isLiked) {
         likeBtn.classList.add('liked');
         likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i><span>Liked</span>';
@@ -312,17 +366,13 @@ function updateLikeButton() {
 // Share Video
 function shareVideo() {
     if (!currentVideo) return;
-    
     const shareUrl = `${window.location.origin}${window.location.pathname}?video=${currentVideo.id}`;
-    
     if (navigator.share) {
         navigator.share({
             title: currentVideo.title,
             text: currentVideo.description,
             url: shareUrl,
-        }).catch(() => {
-            copyToClipboard(shareUrl);
-        });
+        }).catch(() => copyToClipboard(shareUrl));
     } else {
         copyToClipboard(shareUrl);
     }
@@ -330,27 +380,22 @@ function shareVideo() {
 
 // Copy to Clipboard
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Link copied to clipboard!');
-    });
+    navigator.clipboard.writeText(text).then(() => alert('Link copied to clipboard!'));
 }
 
 // Download Video - AUTO DETECT from embed URL
 async function downloadVideo() {
     if (!currentVideo) return;
-    
     const downloadBtn = document.querySelector('.download-btn');
     const originalText = downloadBtn.innerHTML;
-    
     downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Preparing...</span>';
     downloadBtn.disabled = true;
     
     try {
-        const embedUrl = currentVideo.embedUrl;
+        const embedUrl = processVideoUrl(currentVideo.embedUrl);
         let downloadUrl = await extractDownloadUrl(embedUrl);
         
         if (downloadUrl) {
-            // Trigger download
             const link = document.createElement('a');
             link.href = downloadUrl;
             link.download = `${currentVideo.title}.mp4`;
@@ -358,75 +403,55 @@ async function downloadVideo() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
             downloadBtn.innerHTML = '<i class="fas fa-check"></i><span>Downloading...</span>';
-            setTimeout(() => {
-                downloadBtn.innerHTML = originalText;
-                downloadBtn.disabled = false;
-            }, 2000);
         } else {
-            // Fallback: Open embed URL in new tab
             window.open(embedUrl, '_blank');
             downloadBtn.innerHTML = '<i class="fas fa-external-link-alt"></i><span>Opened</span>';
-            setTimeout(() => {
-                downloadBtn.innerHTML = originalText;
-                downloadBtn.disabled = false;
-            }, 2000);
         }
     } catch (error) {
-        console.error('Download error:', error);
         downloadBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Error</span>';
+        alert('Download failed. Please try again.');
+    } finally {
         setTimeout(() => {
             downloadBtn.innerHTML = originalText;
             downloadBtn.disabled = false;
         }, 2000);
-        alert('Download failed. Please try again.');
     }
 }
 
 // Extract Download URL from Embed URL
 async function extractDownloadUrl(embedUrl) {
-    // If direct video file, return as is
-    if (isDirectVideoUrl(embedUrl)) {
-        return embedUrl;
-    }
+    if (isDirectVideoUrl(embedUrl)) return embedUrl;
     
-    // Google Drive
     if (isGoogleDriveUrl(embedUrl)) {
         const fileId = extractGoogleDriveId(embedUrl);
-        if (fileId) {
-            return `https://drive.google.com/uc?export=download&id=${fileId}`;
-        }
+        if (fileId) return `https://drive.google.com/uc?export=download&id=${fileId}`;
     }
     
-    // YouTube
-    if (embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be')) {
-        return await extractYouTubeDownload(embedUrl);
+    if (embedUrl.includes('youtube.com/embed')) {
+        const videoId = extractYouTubeId(embedUrl);
+        if (videoId) return await extractYouTubeDownload(videoId);
     }
     
-    // Vimeo
-    if (embedUrl.includes('vimeo.com')) {
-        return await extractVimeoDownload(embedUrl);
+    if (embedUrl.includes('player.vimeo.com')) {
+        const videoId = extractVimeoId(embedUrl);
+        if (videoId) return await extractVimeoDownload(videoId);
     }
     
-    // Dailymotion
-    if (embedUrl.includes('dailymotion.com')) {
-        return await extractDailymotionDownload(embedUrl);
+    if (embedUrl.includes('dailymotion.com/embed')) {
+        const videoId = extractDailymotionId(embedUrl);
+        if (videoId) return await extractDailymotionDownload(videoId);
     }
     
     return null;
 }
 
 // Extract YouTube Download URL
-async function extractYouTubeDownload(url) {
-    const videoId = extractYouTubeId(url);
-    if (!videoId) return null;
-    
+async function extractYouTubeDownload(videoId) {
     const apis = [
         `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`,
         `https://api.codetabs.com/v1/proxy?quest=https://www.youtube.com/watch?v=${videoId}`
     ];
-    
     for (const api of apis) {
         try {
             const response = await fetch(api);
@@ -435,60 +460,33 @@ async function extractYouTubeDownload(url) {
             if (streamMatch) {
                 const streams = decodeURIComponent(streamMatch[1]);
                 const urlMatch = streams.match(/url=([^&]+)/);
-                if (urlMatch) {
-                    return decodeURIComponent(urlMatch[1]);
-                }
+                if (urlMatch) return decodeURIComponent(urlMatch[1]);
             }
-        } catch (error) {
-            console.log('API failed:', api);
-        }
-    }
-    return null;
-}
-
-// Extract YouTube Video ID
-function extractYouTubeId(url) {
-    const patterns = [
-        /youtube\.com\/embed\/([^/?]+)/,
-        /youtube\.com\/watch\?v=([^&]+)/,
-        /youtu\.be\/([^/?]+)/
-    ];
-    for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match) return match[1];
+        } catch (e) {}
     }
     return null;
 }
 
 // Extract Vimeo Download URL
-async function extractVimeoDownload(url) {
-    const videoId = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-    if (!videoId) return null;
+async function extractVimeoDownload(videoId) {
     try {
-        const response = await fetch(`https://player.vimeo.com/video/${videoId[1]}/config`);
+        const response = await fetch(`https://player.vimeo.com/video/${videoId}/config`);
         const data = await response.json();
-        if (data.request && data.request.files && data.request.files.progressive) {
+        if (data.request?.files?.progressive) {
             const files = data.request.files.progressive;
-            const bestQuality = files[files.length - 1];
-            return bestQuality.url;
+            return files[files.length - 1].url;
         }
-    } catch (error) {
-        console.error('Vimeo extraction failed:', error);
-    }
+    } catch (e) {}
     return null;
 }
 
 // Extract Dailymotion Download URL
-async function extractDailymotionDownload(url) {
-    const videoId = url.match(/dailymotion\.com\/video\/([^_?]+)/);
-    if (!videoId) return null;
+async function extractDailymotionDownload(videoId) {
     try {
-        const response = await fetch(`https://api.dailymotion.com/video/${videoId[1]}?fields=stream_url`);
+        const response = await fetch(`https://api.dailymotion.com/video/${videoId}?fields=stream_url`);
         const data = await response.json();
         return data.stream_url;
-    } catch (error) {
-        console.error('Dailymotion extraction failed:', error);
-    }
+    } catch (e) {}
     return null;
 }
 
@@ -504,7 +502,6 @@ function showAllVideos() {
     displayVideos(videos);
     setActiveSidebar('home');
 }
-
 function showTrending() {
     const trending = [...videos].sort((a, b) => {
         const statsA = videoStats[a.id] || { views: 0 };
@@ -514,7 +511,6 @@ function showTrending() {
     displayVideos(trending);
     setActiveSidebar('trending');
 }
-
 function showMostViewed() {
     const mostViewed = [...videos].sort((a, b) => {
         const statsA = videoStats[a.id] || { views: 0 };
@@ -524,7 +520,6 @@ function showMostViewed() {
     displayVideos(mostViewed);
     setActiveSidebar('viewed');
 }
-
 function showMostLiked() {
     const mostLiked = [...videos].sort((a, b) => {
         const statsA = videoStats[a.id] || { likes: 0 };
@@ -539,14 +534,7 @@ function showMostLiked() {
 function setActiveSidebar(active) {
     const items = document.querySelectorAll('.sidebar-item');
     items.forEach(item => item.classList.remove('active'));
-    
-    const activeMap = {
-        'home': 0,
-        'trending': 1,
-        'viewed': 2,
-        'liked': 3
-    };
-    
+    const activeMap = { 'home': 0, 'trending': 1, 'viewed': 2, 'liked': 3 };
     if (activeMap[active] !== undefined) {
         items[activeMap[active]].classList.add('active');
     }
@@ -555,15 +543,11 @@ function setActiveSidebar(active) {
 // Handle browser back button
 window.addEventListener('popstate', function(event) {
     if (event.state && event.state.videoId) {
-        // User navigated back to a video state, reopen modal
-        const videoId = event.state.videoId;
-        openVideo(videoId, false);
+        openVideo(event.state.videoId, false);
     } else {
-        // No state, close modal if open
         if (document.getElementById('videoModal').style.display === 'block') {
             closeModal();
         }
-        // Show all videos
         showAllVideos();
     }
 });
@@ -573,22 +557,17 @@ window.onclick = function(event) {
     if (event.target === document.getElementById('videoModal')) {
         closeModal();
     }
-}
+};
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeModal();
-    }
+    if (event.key === 'Escape') closeModal();
 });
 
 // Load videos on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadVideos();
-    // Check if there's a video ID in URL
     const urlParams = new URLSearchParams(window.location.search);
     const videoId = urlParams.get('video');
-    if (videoId) {
-        openVideo(parseInt(videoId), false);
-    }
+    if (videoId) openVideo(parseInt(videoId), false);
 });
