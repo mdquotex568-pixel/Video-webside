@@ -1,0 +1,31 @@
+{
+    "videos": [
+        {
+            "id": 1,
+            "title": "Amazing Nature Documentary",
+            "description": "Beautiful nature footage with relaxing music. Watch this stunning documentary about wildlife.",
+            "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            "downloadUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+            "category": "nature",
+            "tags": ["wildlife", "animals", "relaxing"]
+        },
+        {
+            "id": 2,
+            "title": "Big Buck Bunny - Animation",
+            "description": "Classic animation short film about a big rabbit. Great for all ages.",
+            "embedUrl": "https://www.youtube.com/embed/aqz-KE-bpKQ",
+            "downloadUrl": "https://www.w3schools.com/html/movie.mp4",
+            "category": "animation",
+            "tags": ["cartoon", "funny", "kids"]
+        },
+        {
+            "id": 3,
+            "title": "Music Video - Top Hits 2024",
+            "description": "Latest music videos collection. All your favorite songs in one place.",
+            "embedUrl": "https://www.youtube.com/embed/9bZkp7q19f0",
+            "downloadUrl": "https://example.com/music-video.mp4",
+            "category": "music",
+            "tags": ["song", "dance", "entertainment"]
+        }
+    ]
+}
