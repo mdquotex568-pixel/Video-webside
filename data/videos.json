@@ -2,53 +2,26 @@
     "videos": [
         {
             "id": 1,
-            "title": "YouTube Normal Watch Link",
-            "description": "Just paste the regular YouTube URL.",
-            "embedUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            "category": "music",
-            "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+            "title": "আমার প্রথম ভিডিও",
+            "description": "এটি একটি উদাহরণ",
+            "embedUrl": "https://example.com/first-video",
+            "category": "general",
+            "thumbnailUrl": "https://via.placeholder.com/640x360.png?text=First+Video"
         },
         {
             "id": 2,
-            "title": "YouTube Shorts Link",
-            "description": "YouTube Shorts URL works automatically.",
-            "embedUrl": "https://vimeo.com/1218805251?share=copy&fl=sv&fe=ci",
-            "category": "entertainment"
+            "title": "দ্বিতীয় ভিডিও",
+            "description": "কোনো থাম্বনেইল নেই",
+            "embedUrl": "https://example.com/second-video",
+            "category": "general"
         },
         {
             "id": 3,
-            "title": "Vimeo Video",
-            "description": "Vimeo normal link, no need to convert.",
-            "embedUrl": "https://vimeo.com/1084537",
-            "category": "animation"
-        },
-        {
-            "id": 4,
-            "title": "Dailymotion Video",
-            "description": "Dailymotion regular link.",
-            "embedUrl": "https://www.dailymotion.com/video/x7tg9v0",
-            "category": "sports"
-        },
-        {
-            "id": 5,
-            "title": "Google Drive Share Link",
-            "description": "Google Drive share link works.",
-            "embedUrl": "https://drive.google.com/file/d/1_zi4Ur1Js6TtMxO-xeUcR763iS0L8V_c/view?usp=drivesdk",
-            "category": "education"
-        },
-        {
-            "id": 6,
-            "title": "Direct MP4 File",
-            "description": "Direct video file, plays natively.",
-            "embedUrl": "https://vimeo.com/1218805251?share=copy&fl=sv&fe=ci",
-            "category": "other"
-        },
-        {
-            "id": 7,
-            "title": "Full Iframe Embed Code",
-            "description": "You can paste the entire iframe code.",
-            "embedUrl": "<iframe width='560' height='315' src='https://www.youtube.com/embed/9bZkp7q19f0' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe>",
-            "category": "music"
+            "title": "তৃতীয় ভিডিও",
+            "description": "আরেকটি ভিডিও",
+            "embedUrl": "https://example.com/third-video",
+            "category": "music",
+            "thumbnailUrl": "https://via.placeholder.com/640x360.png?text=Music"
         }
     ]
 }
