@@ -61,10 +61,7 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <div id="videoGrid" class="video-grid">
-            <!-- Videos load here -->
-        </div>
-        
+        <div id="videoGrid" class="video-grid"></div>
         <div id="noResults" class="no-results" style="display: none;">
             <i class="fas fa-search"></i>
             <h2>No videos found</h2>
@@ -72,59 +69,6 @@
         </div>
     </main>
 
-    <!-- Video Modal -->
-    <div id="videoModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">
-                <i class="fas fa-times"></i>
-            </span>
-            
-            <div class="video-player" id="videoPlayerContainer">
-                <!-- Player will be inserted here dynamically -->
-            </div>
-            
-            <div class="video-info">
-                <h2 id="videoTitle" class="video-title"></h2>
-                
-                <div class="video-stats">
-                    <span class="stat">
-                        <i class="fas fa-eye"></i>
-                        <span id="viewCount">0 views</span>
-                    </span>
-                    <span class="stat">
-                        <i class="fas fa-thumbs-up"></i>
-                        <span id="likeCount">0 likes</span>
-                    </span>
-                </div>
-                
-                <p id="videoDescription" class="video-description"></p>
-                
-                <div class="action-buttons">
-                    <button class="btn like-btn" onclick="likeVideo()" id="likeBtn">
-                        <i class="fas fa-thumbs-up"></i>
-                        <span>Like</span>
-                    </button>
-                    
-                    <button class="btn share-btn" onclick="shareVideo()">
-                        <i class="fas fa-share"></i>
-                        <span>Share</span>
-                    </button>
-                    
-                    <button class="btn download-btn" onclick="downloadVideo()">
-                        <i class="fas fa-download"></i>
-                        <span>Download</span>
-                    </button>
-                </div>
-
-                <!-- Related Videos Section -->
-                <div class="related-section">
-                    <h3>Related Videos</h3>
-                    <div id="relatedVideos" class="related-grid"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="js/main.js"></script>
 </body>
-    </html>
+</html>
