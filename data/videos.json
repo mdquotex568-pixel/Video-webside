@@ -2,11 +2,11 @@
     "videos": [
         {
             "id": 1,
-            "title": "আমার প্রথম ভিডিও",
-            "description": "এটি একটি উদাহরণ",
-            "embedUrl": "https://example.com/first-video",
+            "title": "miss chocolate",
+            "description": "মিস চকলেট এর ভাইরাল ভিডিও",
+            "embedUrl": "https://shrinkme.click/bhvgj76V",
             "category": "general",
-            "thumbnailUrl": "https://via.placeholder.com/640x360.png?text=First+Video"
+            "thumbnailUrl": "https://i.imgur.com/YDwQjFl.jpeg"
         },
         {
             "id": 2,
